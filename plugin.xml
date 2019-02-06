@@ -28,38 +28,42 @@
   <platform name="ios">
     <source-file src="src/ios/ZipPlugin.m" />
     <header-file src="src/ios/ZipPlugin.h" />
-    <header-file src="src/ios/Common.h" />
-    <header-file src="src/ios/aes/aes.h" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/aes_via_ace.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/aescrypt.c" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/aeskey.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/aesopt.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/aestab.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/aestab.h" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/brg_endian.h" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/brg_types.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/entropy.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/entropy.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/fileenc.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/fileenc.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/hmac.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/hmac.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/prng.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/prng.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/pwd2key.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/pwd2key.h" target-dir="Plugins/aes" />
-    <source-file src="src/ios/aes/sha1.c" target-dir="Plugins/aes" />
-    <header-file src="src/ios/aes/sha1.h" target-dir="Plugins/aes" />
+    <header-file src="src/ios/SSZipCommon.h" />
+    <header-file src="src/ios/minizip/aes/aes.h" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/aes_ni.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/aes_ni.c" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/aescrypt.c" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/aeskey.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/aesopt.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/aestab.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/aestab.h" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/brg_endian.h" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/brg_types.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/fileenc.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/fileenc.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/hmac.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/hmac.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/prng.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/prng.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/pwd2key.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/pwd2key.h" target-dir="Plugins/minizip/aes" />
+    <source-file src="src/ios/minizip/aes/sha1.c" target-dir="Plugins/minizip/aes" />
+    <header-file src="src/ios/minizip/aes/sha1.h" target-dir="Plugins/minizip/aes" />
     <source-file src="src/ios/SSZipArchive.m" target-dir="Plugins/minizip" />
     <header-file src="src/ios/SSZipArchive.h" target-dir="Plugins/minizip" />
     <source-file src="src/ios/minizip/zip.c" target-dir="Plugins/minizip" />
     <header-file src="src/ios/minizip/zip.h" target-dir="Plugins/minizip" />
     <source-file src="src/ios/minizip/unzip.c" target-dir="Plugins/minizip" />
     <header-file src="src/ios/minizip/unzip.h" target-dir="Plugins/minizip" />
-    <source-file src="src/ios/minizip/mztools.c" target-dir="Plugins/minizip" />
-    <header-file src="src/ios/minizip/mztools.h" target-dir="Plugins/minizip" />
+    <source-file src="src/ios/minizip/minishared.c" target-dir="Plugins/minizip" />
+    <header-file src="src/ios/minizip/minishared.h" target-dir="Plugins/minizip" />
+    <source-file src="src/ios/minizip/ioapi_buf.c" target-dir="Plugins/minizip" />
+    <header-file src="src/ios/minizip/ioapi_buf.h" target-dir="Plugins/minizip" />
+    <source-file src="src/ios/minizip/ioapi_mem.c" target-dir="Plugins/minizip" />
+    <header-file src="src/ios/minizip/ioapi_mem.h" target-dir="Plugins/minizip" />
     <source-file src="src/ios/minizip/ioapi.c" target-dir="Plugins/minizip" />
     <header-file src="src/ios/minizip/ioapi.h" target-dir="Plugins/minizip" />
+    <source-file src="src/ios/minizip/crypt.c" target-dir="Plugins/minizip" />
     <header-file src="src/ios/minizip/crypt.h" target-dir="Plugins/minizip" />
 
     <config-file target="config.xml" parent="/widget">
