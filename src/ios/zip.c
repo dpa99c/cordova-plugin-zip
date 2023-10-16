@@ -33,9 +33,9 @@
 #  define AES_VERSION         (0x0001)
 #  define AES_ENCRYPTIONMODE  (0x03)
 
-#  include "aes/aes.h"
-#  include "aes/fileenc.h"
-#  include "aes/prng.h"
+#  include "aes.h"
+#  include "fileenc.h"
+#  include "prng.h"
 #endif
 #ifdef HAVE_APPLE_COMPRESSION
 #  include <compression.h>
