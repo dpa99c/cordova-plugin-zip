@@ -39,12 +39,7 @@ function runUnzipTest(zipFileName) {
             doUnzip(destZipPath, outputDir, resultDiv);
         }, function() {
             // File does not exist, copy from assets
-            var assetZipPath = null;
-            if (cordova.platformId === 'android') {
-                assetZipPath = cordova.file.applicationDirectory + 'www/zip/' + zipFileName;
-            } else {
-                assetZipPath = 'www/zip/' + zipFileName;
-            }
+            var assetZipPath = cordova.file.applicationDirectory + 'www/zip/' + zipFileName;
             window.resolveLocalFileSystemURL(assetZipPath, function(fileEntry) {
                 window.resolveLocalFileSystemURL(dataDir, function(dirEntry) {
                     fileEntry.copyTo(dirEntry, zipFileName, function(newFileEntry) {
@@ -61,10 +56,7 @@ function runUnzipTest(zipFileName) {
             });
         });
     } else {
-        // fallback: unzip to same www/zip/ dir (may not work on all platforms)
-        var outputDir = 'zip/unzip-' + zipFileName.replace('.zip','') + '/';
-        var zipPath = 'zip/' + zipFileName;
-        doUnzip(zipPath, outputDir, resultDiv);
+        resultDiv.innerText = 'cordova-plugin-file not available.';
     }
 }
 
