@@ -1,4 +1,3 @@
-
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
@@ -30,27 +29,46 @@ function runUnzipTest(zipFileName) {
     resultDiv.innerHTML = 'Unzipping <b>' + zipFileName + '</b>...';
 
     // Use cordova-plugin-file to get the output directory
-    var outputDir = null;
-    if (window.cordova && window.resolveLocalFileSystemURL) {
-        window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dirEntry) {
-            outputDir = dirEntry.toURL() + 'unzip-' + zipFileName.replace('.zip','') + '/';
-            doUnzip(zipFileName, outputDir, resultDiv);
-        }, function(err) {
-            resultDiv.innerText = 'Failed to resolve output directory: ' + JSON.stringify(err);
+    if (window.cordova && window.resolveLocalFileSystemURL && window.cordova.file) {
+        var dataDir = cordova.file.dataDirectory;
+        var destZipPath = dataDir + zipFileName;
+        // Check if zip file already exists in dataDirectory
+        window.resolveLocalFileSystemURL(destZipPath, function() {
+            // File exists, proceed to unzip
+            var outputDir = dataDir + 'unzip-' + zipFileName.replace('.zip','') + '/';
+            doUnzip(destZipPath, outputDir, resultDiv);
+        }, function() {
+            // File does not exist, copy from assets
+            var assetZipPath = null;
+            if (cordova.platformId === 'android') {
+                assetZipPath = cordova.file.applicationDirectory + 'www/zip/' + zipFileName;
+            } else {
+                assetZipPath = 'www/zip/' + zipFileName;
+            }
+            window.resolveLocalFileSystemURL(assetZipPath, function(fileEntry) {
+                window.resolveLocalFileSystemURL(dataDir, function(dirEntry) {
+                    fileEntry.copyTo(dirEntry, zipFileName, function(newFileEntry) {
+                        var outputDir = dataDir + 'unzip-' + zipFileName.replace('.zip','') + '/';
+                        doUnzip(newFileEntry.nativeURL, outputDir, resultDiv);
+                    }, function(err) {
+                        resultDiv.innerText = 'Failed to copy zip file: ' + JSON.stringify(err);
+                    });
+                }, function(err) {
+                    resultDiv.innerText = 'Failed to resolve data directory: ' + JSON.stringify(err);
+                });
+            }, function(err) {
+                resultDiv.innerText = 'Zip file not found in assets: ' + JSON.stringify(err);
+            });
         });
     } else {
         // fallback: unzip to same www/zip/ dir (may not work on all platforms)
-        outputDir = 'zip/unzip-' + zipFileName.replace('.zip','') + '/';
-        doUnzip(zipFileName, outputDir, resultDiv);
+        var outputDir = 'zip/unzip-' + zipFileName.replace('.zip','') + '/';
+        var zipPath = 'zip/' + zipFileName;
+        doUnzip(zipPath, outputDir, resultDiv);
     }
 }
 
-function doUnzip(zipFileName, outputDir, resultDiv) {
-    var zipPath = 'zip/' + zipFileName;
-    if (window.cordova && window.cordova.file && window.cordova.file.applicationDirectory) {
-        // Use absolute path for applicationDirectory
-        zipPath = cordova.file.applicationDirectory + 'www/zip/' + zipFileName;
-    }
+function doUnzip(zipPath, outputDir, resultDiv) {
     if (window.zip && typeof window.zip.unzip === 'function') {
         window.zip.unzip(zipPath, outputDir, function(result) {
             if (typeof result === 'object' && result.code) {
