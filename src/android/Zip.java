@@ -58,30 +58,23 @@ public class Zip extends CordovaPlugin {
             String zipFileName = args.getString(0);
             String outputDirectory = args.getString(1);
 
-            // Since Cordova 3.3.0 and release of File plugins, files are accessed via cdvfile://
-            // Accept a path or a URI for the source zip.
             Uri zipUri = getUriForArg(zipFileName);
             Uri outputUri = getUriForArg(outputDirectory);
-
             CordovaResourceApi resourceApi = webView.getResourceApi();
 
             File tempFile = resourceApi.mapUriToFile(zipUri);
             if (tempFile == null || !tempFile.exists()) {
-                String errorMessage = "Zip file does not exist";
-                callbackContext.error(errorMessage);
-                Log.e(LOG_TAG, errorMessage);
+                sendError(callbackContext, "NO_ZIP_FILE", "Zip file does not exist");
                 return;
             }
 
             File outputDir = resourceApi.mapUriToFile(outputUri);
-            outputDirectory = outputDir.getAbsolutePath();
-            outputDirectory += outputDirectory.endsWith(File.separator) ? "" : File.separator;
             if (outputDir == null || (!outputDir.exists() && !outputDir.mkdirs())){
-                String errorMessage = "Could not create output directory";
-                callbackContext.error(errorMessage);
-                Log.e(LOG_TAG, errorMessage);
+                sendError(callbackContext, "OUTPUT_DIR_ERROR", "Could not create output directory");
                 return;
             }
+            outputDirectory = outputDir.getAbsolutePath();
+            outputDirectory += outputDirectory.endsWith(File.separator) ? "" : File.separator;
 
             OpenForReadResult zipFile = resourceApi.openForRead(zipUri);
             ProgressEvent progress = new ProgressEvent();
@@ -122,24 +115,52 @@ public class Zip extends CordovaPlugin {
             {
                 anyEntries = true;
                 String compressedName = ze.getName();
-
-                if (ze.isDirectory()) {
-                   File dir = new File(outputDirectory + compressedName);
-                   dir.mkdirs();
-                } else {
-                    File file = new File(outputDirectory + compressedName);
-                    file.getParentFile().mkdirs();
-                    if(file.exists() || file.createNewFile()){
-                        Log.w("Zip", "extracting: " + file.getPath());
-                        FileOutputStream fout = new FileOutputStream(file);
-                        int count;
-                        while ((count = zis.read(buffer)) != -1)
-                        {
-                            fout.write(buffer, 0, count);
+                try {
+                    if (ze.isDirectory()) {
+                        File dir = new File(outputDirectory + compressedName);
+                        if (!dir.exists() && !dir.mkdirs()) {
+                            sendError(callbackContext, "OUTPUT_DIR_ERROR", "Could not create output directory for entry: " + compressedName);
+                            return;
                         }
-                        fout.close();
+                    } else {
+                        File file = new File(outputDirectory + compressedName);
+                        File parent = file.getParentFile();
+                        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                            sendError(callbackContext, "OUTPUT_DIR_ERROR", "Could not create parent directory for file: " + compressedName);
+                            return;
+                        }
+                        if(file.exists() || file.createNewFile()){
+                            Log.w("Zip", "extracting: " + file.getPath());
+                            FileOutputStream fout = null;
+                            try {
+                                fout = new FileOutputStream(file);
+                                int count;
+                                while ((count = zis.read(buffer)) != -1)
+                                {
+                                    fout.write(buffer, 0, count);
+                                }
+                            } catch (IOException ioex) {
+                                if (ioex.getMessage() != null && ioex.getMessage().contains("ENOSPC")) {
+                                    sendError(callbackContext, "OUT_OF_STORAGE", "Out of storage space");
+                                } else {
+                                    sendError(callbackContext, "UNKNOWN_ERROR", ioex.getMessage());
+                                }
+                                return;
+                            } finally {
+                                if (fout != null) fout.close();
+                            }
+                        } else {
+                            sendError(callbackContext, "OUTPUT_DIR_ERROR", "Could not create file: " + compressedName);
+                            return;
+                        }
                     }
-
+                } catch (IOException ioex) {
+                    if (ioex.getMessage() != null && ioex.getMessage().contains("ENOSPC")) {
+                        sendError(callbackContext, "OUT_OF_STORAGE", "Out of storage space");
+                    } else {
+                        sendError(callbackContext, "UNKNOWN_ERROR", ioex.getMessage());
+                    }
+                    return;
                 }
                 progress.addLoaded(ze.getCompressedSize());
                 updateProgress(callbackContext, progress);
@@ -152,11 +173,15 @@ public class Zip extends CordovaPlugin {
             if (anyEntries)
                 callbackContext.success();
             else
-                callbackContext.error("Bad zip file");
+                sendError(callbackContext, "BAD_ZIP_FILE", "Bad zip file");
         } catch (Exception e) {
-            String errorMessage = "An error occurred while unzipping.";
-            callbackContext.error(errorMessage);
-            Log.e(LOG_TAG, errorMessage, e);
+            String msg = e.getMessage() != null ? e.getMessage() : "An error occurred while unzipping.";
+            if (msg.contains("ENOSPC")) {
+                sendError(callbackContext, "OUT_OF_STORAGE", "Out of storage space");
+            } else {
+                sendError(callbackContext, "UNKNOWN_ERROR", msg);
+            }
+            Log.e(LOG_TAG, msg, e);
         } finally {
             if (inputStream != null) {
                 try {
@@ -164,6 +189,17 @@ public class Zip extends CordovaPlugin {
                 } catch (IOException e) {
                 }
             }
+        }
+    }
+
+    private void sendError(CallbackContext callbackContext, String code, String message) {
+        try {
+            JSONObject error = new JSONObject();
+            error.put("code", code);
+            error.put("message", message);
+            callbackContext.error(error);
+        } catch (JSONException e) {
+            callbackContext.error(message);
         }
     }
 

@@ -20,7 +20,12 @@ exports.unzip = function(fileName, outputDirectory, callback, progressCallback) 
     };
     var fail = function(result) {
         if (callback) {
-            callback(-1);
+            // If result is an error object with code/message, pass it through
+            if (result && typeof result === 'object' && result.code && result.message) {
+                callback(result);
+            } else {
+                callback({ code: 'UNKNOWN_ERROR', message: result || 'Unzip failed' });
+            }
         }
     };
     exec(win, fail, 'Zip', 'unzip', [fileName, outputDirectory]);

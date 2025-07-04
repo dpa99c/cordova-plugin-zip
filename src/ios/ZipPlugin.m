@@ -27,7 +27,6 @@
     self->_command = command;
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
-        
         @try {
             NSString *zipURL = [command.arguments objectAtIndex:0];
             NSString *destinationURL = [command.arguments objectAtIndex:1];
@@ -39,14 +38,36 @@
             if([SSZipArchive unzipFileAtPath:zipPath toDestination:destinationPath overwrite:YES password:nil error:&error delegate:self]) {
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             } else {
-                NSLog(@"%@ - %@", @"Error occurred during unzipping", [error localizedDescription]);
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Error occurred during unzipping"];
+                NSString *code = @"UNKNOWN_ERROR";
+                NSString *msg = @"Error occurred during unzipping";
+                if (error) {
+                    msg = [error localizedDescription] ?: msg;
+                    switch (error.code) {
+                        case ENOENT:
+                            code = @"NO_ZIP_FILE";
+                            break;
+                        case ENOSPC:
+                            code = @"OUT_OF_STORAGE";
+                            break;
+                        default:
+                            if ([msg containsString:@"No space left"] || [msg containsString:@"out of space"] || [msg containsString:@"ENOSPC"]) {
+                                code = @"OUT_OF_STORAGE";
+                            } else if ([msg containsString:@"directory"] && [msg containsString:@"create"]) {
+                                code = @"OUTPUT_DIR_ERROR";
+                            } else if ([msg containsString:@"corrupt"] || [msg containsString:@"CRC"] || [msg containsString:@"crc"]) {
+                                code = @"BAD_ZIP_FILE";
+                            }
+                            break;
+                    }
+                }
+                NSDictionary *errDict = @{ @"code": code, @"message": msg };
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errDict];
             }
         } @catch(NSException* exception) {
-            NSLog(@"%@ - %@", @"Error occurred during unzipping", [exception debugDescription]);
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Error occurred during unzipping"];
+            NSString *msg = [exception reason] ?: @"Error occurred during unzipping";
+            NSDictionary *errDict = @{ @"code": @"UNKNOWN_ERROR", @"message": msg };
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errDict];
         }
-        
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
@@ -56,7 +77,7 @@
     NSMutableDictionary* message = [NSMutableDictionary dictionaryWithCapacity:2];
     [message setObject:[NSNumber numberWithLongLong:fileIndex] forKey:@"loaded"];
     [message setObject:[NSNumber numberWithLongLong:totalFiles] forKey:@"total"];
-    
+
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
     [pluginResult setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self->_command.callbackId];
